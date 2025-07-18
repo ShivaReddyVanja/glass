@@ -418,8 +418,8 @@ export const updateUserProfile = async (data: { displayName: string }): Promise<
     if (!response.ok) throw new Error('Failed to update user profile');
   }
 };
-
-export const findOrCreateUser = async (user: UserProfile): Promise<UserProfile> => {
+ 
+export const findOrCreateUser= async (user: UserProfile): Promise<UserProfile> => {
   if (isFirebaseMode()) {
     const uid = firebaseAuth.currentUser!.uid;
     const existingUser = await FirestoreUserService.getUser(uid);

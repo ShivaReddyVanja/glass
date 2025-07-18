@@ -483,6 +483,8 @@ export class SettingsView extends LitElement {
     static properties = {
         shortcuts: { type: Object, state: true },
         firebaseUser: { type: Object, state: true },
+
+
         isLoading: { type: Boolean, state: true },
         isContentProtectionOn: { type: Boolean, state: true },
         saving: { type: Boolean, state: true },

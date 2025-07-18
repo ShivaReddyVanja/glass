@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: rgba(0, 0, 0, 0.4); /* Dark semi-transparent background */
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      backdrop-filter: blur(10px); /* Frosted effect */
+      -webkit-backdrop-filter: blur(10px); /* Safari support */
+      overflow: hidden; /* Hides both horizontal and vertical scrollbars */
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+    }
+    /* Hide scrollbar for WebKit browsers (Chrome, Safari) */
+    body::-webkit-scrollbar {
+      display: none;
+    }
+    #container {
+      background: rgba(0, 0, 0, 0.4); /* Slightly darker container for contrast */
+      padding: 2rem;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+      text-align: center;
+      overflow: hidden; /* Ensures no internal scrolling in container */
+    }
+    h2 {
+      margin-top: 0;
+      color: white;
+    }
+    ul {
+      padding-left: 1.2rem;
+      color: white;
+      text-align: left;
+    }
+    li {
+      color: white;
+    }
+  </style>
+  <meta charset="UTF-8" />
+  <title>Interview Questions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script defer src="questionsRenderer.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h2>Interview Questions</h2>
+    <ul id="questions-list">
+      <li>Loading...</li>
+    </ul>
+  </div>
+</body>
+</html>

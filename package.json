@@ -17,7 +17,10 @@
         "build:renderer": "node build.js",
         "build:web": "cd pickleglass_web && npm run build && cd ..",
         "build:all": "npm run build:renderer && npm run build:web",
-        "watch:renderer": "node build.js --watch"
+        "watch:renderer": "node build.js --watch",
+        "vite": "npm run dev --prefix src/react",
+        "electron:dev": "wait-on http://localhost:5173 && electron .",
+        "start:vite": "concurrently -k -r \"npm run vite\" \"npm run electron:dev\""
     },
     "keywords": [
         "glass",
@@ -50,21 +53,23 @@
         "keytar": "^7.9.0",
         "node-fetch": "^2.7.0",
         "openai": "^4.70.0",
+        "pdf-parse": "^1.1.1",
         "portkey-ai": "^1.10.1",
         "react-hot-toast": "^2.5.2",
         "sharp": "^0.34.2",
         "validator": "^13.11.0",
-        "wait-on": "^8.0.3",
         "ws": "^8.18.0"
     },
     "devDependencies": {
         "@electron/fuses": "^1.8.0",
         "@electron/notarize": "^2.5.0",
+        "concurrently": "^9.2.0",
         "electron": "^30.5.1",
         "electron-builder": "^26.0.12",
         "electron-reloader": "^1.2.3",
         "esbuild": "^0.25.5",
-        "prettier": "^3.6.2"
+        "prettier": "^3.6.2",
+        "wait-on": "^8.0.3"
     },
     "optionalDependencies": {
         "electron-liquid-glass": "^1.0.1"

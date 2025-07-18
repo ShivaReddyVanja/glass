@@ -40,7 +40,8 @@ export class MainHeader extends LitElement {
 
         .header {
             -webkit-app-region: drag;
-            width: max-content;
+            width: 500px;
+            flex: 1;
             height: 47px;
             padding: 2px 10px 2px 13px;
             background: transparent;
@@ -49,7 +50,7 @@ export class MainHeader extends LitElement {
             /* backdrop-filter: blur(1px); */
             justify-content: space-between;
             align-items: center;
-            display: inline-flex;
+            display: flex;
             box-sizing: border-box;
             position: relative;
         }
@@ -289,6 +290,33 @@ export class MainHeader extends LitElement {
             width: 16px;
             height: 16px;
         }
+        /* Upload Button Styles */
+        .upload-button {
+            -webkit-app-region: no-drag;
+            height: 26px;
+            padding: 0 13px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9000px;
+            justify-content: center;
+            width: max-content;
+            align-items: center;
+            gap: 6px;
+            display: flex;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            color: white;
+            font-size: 12px;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-weight: 500;
+            transition: background 0.15s ease;
+        }
+        .upload-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .upload-button .icon-container svg {
+            fill: white;
+        }
         /* ────────────────[ GLASS BYPASS ]─────────────── */
         :host-context(body.has-glass) .header,
         :host-context(body.has-glass) .listen-button,
@@ -338,6 +366,55 @@ export class MainHeader extends LitElement {
             transform: none !important;
             will-change: auto !important;
         }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 1000;
+        }
+        .modal-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #222;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            z-index: 1001;
+            min-width: 340px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: auto;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px 10px 24px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #888;
+            margin-left: 12px;
+        }
+        .modal-close:hover {
+            color: #2563eb;
+        }
+        .modal-content {
+            padding: 18px 24px 24px 24px;
+            font-size: 1em;
+            line-height: 1.6;
+        }
         `;
 
     constructor() {
@@ -355,14 +432,16 @@ export class MainHeader extends LitElement {
         this.handleMouseUp = this.handleMouseUp.bind(this);
         this.dragState = null;
         this.wasJustDragged = false;
+        // PDF upload loading state
+        this.isUploadingResume = false;
     }
 
     _getListenButtonText(status) {
         switch (status) {
             case 'beforeSession': return 'Listen';
-            case 'inSession'   : return 'Stop';
+            case 'inSession': return 'Stop';
             case 'afterSession': return 'Done';
-            default            : return 'Listen';
+            default: return 'Listen';
         }
     }
 
@@ -388,7 +467,7 @@ export class MainHeader extends LitElement {
 
         const deltaX = Math.abs(e.screenX - this.dragState.initialMouseX);
         const deltaY = Math.abs(e.screenY - this.dragState.initialMouseY);
-        
+
         if (deltaX > 3 || deltaY > 3) {
             this.dragState.moved = true;
         }
@@ -420,14 +499,14 @@ export class MainHeader extends LitElement {
             console.log('[MainHeader] Animation already in progress, ignoring toggle');
             return;
         }
-        
+
         if (this.animationEndTimer) {
             clearTimeout(this.animationEndTimer);
             this.animationEndTimer = null;
         }
-        
+
         this.isAnimating = true;
-        
+
         if (this.isVisible) {
             this.hide();
         } else {
@@ -439,17 +518,17 @@ export class MainHeader extends LitElement {
         this.classList.remove('showing');
         this.classList.add('hiding');
     }
-    
+
     show() {
         this.classList.remove('hiding', 'hidden');
         this.classList.add('showing');
     }
-    
+
     handleAnimationEnd(e) {
         if (e.target !== this) return;
-    
+
         this.isAnimating = false;
-    
+
         if (this.classList.contains('hiding')) {
             this.classList.add('hidden');
             if (window.api) {
@@ -498,12 +577,12 @@ export class MainHeader extends LitElement {
     disconnectedCallback() {
         super.disconnectedCallback();
         this.removeEventListener('animationend', this.handleAnimationEnd);
-        
+
         if (this.animationEndTimer) {
             clearTimeout(this.animationEndTimer);
             this.animationEndTimer = null;
         }
-        
+
         if (window.api) {
             if (this._sessionStateTextListener) {
                 window.api.mainHeader.removeOnListenChangeSessionResult(this._sessionStateTextListener);
@@ -574,6 +653,75 @@ export class MainHeader extends LitElement {
         }
     }
 
+    // PDF upload handler
+    _triggerFileInput() {
+        const input = this.renderRoot.getElementById('pdf-upload-input');
+        if (input) {
+            input.value = '';
+            input.click();
+        }
+    }
+
+    async _handleFileSelected(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (file.type !== 'application/pdf') {
+            alert('Please upload a PDF file.');
+            return;
+        }
+        this._openInterviewWindow();
+        console.log("Triggered file input")
+        this.isUploadingResume = true;
+        this.requestUpdate();
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            if (window.api && window.api.mainHeader && window.api.mainHeader.uploadResumePdf) {
+                const result = await window.api.mainHeader.uploadResumePdf({
+                    buffer: arrayBuffer,
+                    name: file.name,
+                });
+                console.log('[MainHeader] PDF upload result:', result);
+                if (result.success && result.questions) {
+                    console.log('[MainHeader] Sending questions to content window:', result.questions);
+                    if (window.api && window.api.mainHeader && window.api.mainHeader.showQuestionsInContentWindow) {
+                        window.api.mainHeader.showInterviewQuestionsWindow(result.questions);
+
+                        window.api.mainHeader.sendOpenPdfQuestionsWindow(result.questions);
+                    } else {
+                        alert('Unable to display questions view.');
+                    }
+                } else {
+                    alert(result.error || 'Failed to generate interview questions.');
+                }
+            } else {
+                alert('Resume upload is not supported in this build.');
+            }
+        } catch (err) {
+            console.error('Failed to upload/process PDF:', err);
+            alert('Failed to process PDF.');
+        } finally {
+            this.isUploadingResume = false;
+            this.requestUpdate();
+        }
+    }
+    //open interview window
+   async _openInterviewWindow() {
+
+    try {
+        if (window.api && window.api.mainHeader && window.api.mainHeader.openInterviewWindow) {
+        
+            const result = await window.api.mainHeader.openInterviewWindow();
+            if (!result.success) {
+                alert(result.error || 'Failed to open interview window.');
+            }
+        } else {
+            alert('Interview window is not supported in this build.');
+        }
+    } catch (err) {
+        console.error('Failed to open interview window:', err);
+        alert('Failed to open interview window.');
+    }
+}
 
     renderShortcut(accelerator) {
         if (!accelerator) return html``;
@@ -600,7 +748,7 @@ export class MainHeader extends LitElement {
 
     render() {
         const listenButtonText = this._getListenButtonText(this.listenSessionStatus);
-    
+
         const buttonClasses = {
             active: listenButtonText === 'Stop',
             done: listenButtonText === 'Done',
@@ -609,29 +757,30 @@ export class MainHeader extends LitElement {
 
         return html`
             <div class="header" @mousedown=${this.handleMouseDown}>
+                <!-- Listen Button -->
                 <button 
                     class="listen-button ${Object.keys(buttonClasses).filter(k => buttonClasses[k]).join(' ')}"
                     @click=${this._handleListenClick}
                     ?disabled=${this.isTogglingSession}
                 >
                     ${this.isTogglingSession
-                        ? html`
+                ? html`
                             <div class="loading-dots">
                                 <span></span><span></span><span></span>
                             </div>
                         `
-                        : html`
+                : html`
                             <div class="action-text">
                                 <div class="action-text-content">${listenButtonText}</div>
                             </div>
                             <div class="listen-icon">
                                 ${showStopIcon
-                                    ? html`
+                        ? html`
                                         <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect width="9" height="9" rx="1" fill="white"/>
                                         </svg>
                                     `
-                                    : html`
+                        : html`
                                         <svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M1.69922 2.7515C1.69922 2.37153 2.00725 2.0635 2.38722 2.0635H2.73122C3.11119 2.0635 3.41922 2.37153 3.41922 2.7515V8.2555C3.41922 8.63547 3.11119 8.9435 2.73122 8.9435H2.38722C2.00725 8.9435 1.69922 8.63547 1.69922 8.2555V2.7515Z" fill="white"/>
                                             <path d="M5.13922 1.3755C5.13922 0.995528 5.44725 0.6875 5.82722 0.6875H6.17122C6.55119 0.6875 6.85922 0.995528 6.85922 1.3755V9.6315C6.85922 10.0115 6.55119 10.3195 6.17122 10.3195H5.82722C5.44725 10.3195 5.13922 10.0115 5.13922 9.6315V1.3755Z" fill="white"/>
@@ -640,6 +789,11 @@ export class MainHeader extends LitElement {
                                     `}
                             </div>
                         `}
+                </button>
+
+                <!-- PDF Upload Button -->
+                <button class="upload-button" @click=${() => this._openInterviewWindow()} title="Interview" >
+                    <div class="action-text-content"> Interview </div>  
                 </button>
 
                 <div class="header-actions ask-action" @click=${() => this._handleAskClick()}>

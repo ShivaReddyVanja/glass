@@ -3,6 +3,7 @@ import { SettingsView } from '../settings/SettingsView.js';
 import { ListenView } from '../listen/ListenView.js';
 import { AskView } from '../ask/AskView.js';
 import { ShortcutSettingsView } from '../settings/ShortCutSettingsView.js';
+import '../questions/QuestionsView.js';
 
 import '../listen/audioCore/renderer.js';
 
@@ -123,7 +124,12 @@ export class PickleGlassApp extends LitElement {
         }
     }
 
-
+    showQuestions(questions) {
+        console.log('[PickleGlassApp] showQuestions called with:', questions);
+        this.questions = questions;
+        this.currentView = 'questions';
+        this.requestUpdate();
+    }
 
 
     render() {
@@ -152,6 +158,10 @@ export class PickleGlassApp extends LitElement {
                 return html`<help-view></help-view>`;
             case 'setup':
                 return html`<setup-view></setup-view>`;
+            case 'questions':
+                return html`<questions-view .questions=${this.questions}></questions-view>`;
+            case 'interview-window':
+                return html`<pdf-questions-view></pdf-questions-view>`;
             default:
                 return html`<div>Unknown view: ${this.currentView}</div>`;
         }

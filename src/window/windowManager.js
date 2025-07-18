@@ -49,7 +49,7 @@ let movementManager = null;
 
 
 const FADE_DURATION = 250;
-const FADE_FPS      = 60;
+const FADE_FPS = 60;
 
 /**
  * 윈도우 투명도를 서서히 변경한다.
@@ -60,30 +60,30 @@ const FADE_FPS      = 60;
  * @param {Function=} onComplete 
  */
 function fadeWindow(win, from, to, duration = FADE_DURATION, onComplete) {
-  if (!win || win.isDestroyed()) return;
+    if (!win || win.isDestroyed()) return;
 
-  const steps       = Math.max(1, Math.round(duration / (1000 / FADE_FPS)));
-  let   currentStep = 0;
+    const steps = Math.max(1, Math.round(duration / (1000 / FADE_FPS)));
+    let currentStep = 0;
 
-  win.setOpacity(from);
+    win.setOpacity(from);
 
-  const timer = setInterval(() => {
-    if (win.isDestroyed()) { clearInterval(timer); return; }
+    const timer = setInterval(() => {
+        if (win.isDestroyed()) { clearInterval(timer); return; }
 
-    currentStep += 1;
-    const progress = currentStep / steps;
-    const eased    = progress < 1
-      ? 1 - Math.pow(1 - progress, 3)
-      : 1;
+        currentStep += 1;
+        const progress = currentStep / steps;
+        const eased = progress < 1
+            ? 1 - Math.pow(1 - progress, 3)
+            : 1;
 
-    win.setOpacity(from + (to - from) * eased);
+        win.setOpacity(from + (to - from) * eased);
 
-    if (currentStep >= steps) {
-      clearInterval(timer);
-      win.setOpacity(to);
-      onComplete && onComplete();
-    }
-  }, 1000 / FADE_FPS);
+        if (currentStep >= steps) {
+            clearInterval(timer);
+            win.setOpacity(to);
+            onComplete && onComplete();
+        }
+    }, 1000 / FADE_FPS);
 }
 
 const showSettingsWindow = () => {
@@ -98,7 +98,6 @@ const cancelHideSettingsWindow = () => {
     internalBridge.emit('window:requestVisibility', { name: 'settings', visible: true });
 };
 
-
 function setupWindowController(windowPool, layoutManager, movementManager) {
     internalBridge.on('window:requestVisibility', ({ name, visible }) => {
         handleWindowVisibilityRequest(windowPool, layoutManager, movementManager, name, visible);
@@ -108,6 +107,7 @@ function setupWindowController(windowPool, layoutManager, movementManager) {
     });
 }
 
+
 function changeAllWindowsVisibility(windowPool, targetVisibility) {
     const header = windowPool.get('header');
     if (!header) return;
@@ -116,32 +116,32 @@ function changeAllWindowsVisibility(windowPool, targetVisibility) {
         header.isVisible() === targetVisibility) {
         return;
     }
-  
+
     if (header.isVisible()) {
-      lastVisibleWindows.clear();
-  
-      windowPool.forEach((win, name) => {
-        if (win && !win.isDestroyed() && win.isVisible()) {
-          lastVisibleWindows.add(name);
-        }
-      });
-  
-      lastVisibleWindows.forEach(name => {
-        if (name === 'header') return;
-        const win = windowPool.get(name);
-        if (win && !win.isDestroyed()) win.hide();
-      });
-      header.hide();
-  
-      return;
+        lastVisibleWindows.clear();
+
+        windowPool.forEach((win, name) => {
+            if (win && !win.isDestroyed() && win.isVisible()) {
+                lastVisibleWindows.add(name);
+            }
+        });
+
+        lastVisibleWindows.forEach(name => {
+            if (name === 'header') return;
+            const win = windowPool.get(name);
+            if (win && !win.isDestroyed()) win.hide();
+        });
+        header.hide();
+
+        return;
     }
-  
+
     lastVisibleWindows.forEach(name => {
-      const win = windowPool.get(name);
-      if (win && !win.isDestroyed())
-        win.show();
+        const win = windowPool.get(name);
+        if (win && !win.isDestroyed())
+            win.show();
     });
-  }
+}
 
 /**
  * 
@@ -216,6 +216,17 @@ async function handleWindowVisibilityRequest(windowPool, layoutManager, movement
         }
         return;
     }
+    if (name === 'interview-window') {
+        if (shouldBeVisible) {
+            win.show();
+            win.moveTop();
+            win.setAlwaysOnTop(true);
+        } else {
+            win.setAlwaysOnTop(false);
+            win.hide();
+        }
+        return;
+    }
 
 
     if (name === 'shortcut-settings') {
@@ -246,8 +257,8 @@ async function handleWindowVisibilityRequest(windowPool, layoutManager, movement
         const otherWin = windowPool.get(otherName);
         const isOtherWinVisible = otherWin && !otherWin.isDestroyed() && otherWin.isVisible();
 
-        const ANIM_OFFSET_X = 100; 
-        const ANIM_OFFSET_Y = 20; 
+        const ANIM_OFFSET_X = 100;
+        const ANIM_OFFSET_Y = 20;
 
         if (shouldBeVisible) {
             win.setOpacity(0);
@@ -353,45 +364,45 @@ const toggleContentProtection = () => {
 const resizeHeaderWindow = ({ width, height }) => {
     const header = windowPool.get('header');
     if (header) {
-      console.log(`[WindowManager] Resize request: ${width}x${height}`);
-      
-      if (movementManager && movementManager.isAnimating) {
-        console.log('[WindowManager] Skipping resize during animation');
-        return { success: false, error: 'Cannot resize during animation' };
-      }
+        console.log(`[WindowManager] Resize request: ${width}x${height}`);
 
-      const currentBounds = header.getBounds();
-      console.log(`[WindowManager] Current bounds: ${currentBounds.width}x${currentBounds.height} at (${currentBounds.x}, ${currentBounds.y})`);
-      
-      if (currentBounds.width === width && currentBounds.height === height) {
-        console.log('[WindowManager] Already at target size, skipping resize');
+        if (movementManager && movementManager.isAnimating) {
+            console.log('[WindowManager] Skipping resize during animation');
+            return { success: false, error: 'Cannot resize during animation' };
+        }
+
+        const currentBounds = header.getBounds();
+        console.log(`[WindowManager] Current bounds: ${currentBounds.width}x${currentBounds.height} at (${currentBounds.x}, ${currentBounds.y})`);
+
+        if (currentBounds.width === width && currentBounds.height === height) {
+            console.log('[WindowManager] Already at target size, skipping resize');
+            return { success: true };
+        }
+
+        const wasResizable = header.isResizable();
+        if (!wasResizable) {
+            header.setResizable(true);
+        }
+
+        const centerX = currentBounds.x + currentBounds.width / 2;
+        const newX = Math.round(centerX - width / 2);
+
+        const display = getCurrentDisplay(header);
+        const { x: workAreaX, width: workAreaWidth } = display.workArea;
+
+        const clampedX = Math.max(workAreaX, Math.min(workAreaX + workAreaWidth - width, newX));
+
+        header.setBounds({ x: clampedX, y: currentBounds.y, width, height });
+
+        if (!wasResizable) {
+            header.setResizable(false);
+        }
+
+        if (updateLayout) {
+            updateLayout();
+        }
+
         return { success: true };
-      }
-
-      const wasResizable = header.isResizable();
-      if (!wasResizable) {
-        header.setResizable(true);
-      }
-
-      const centerX = currentBounds.x + currentBounds.width / 2;
-      const newX = Math.round(centerX - width / 2);
-
-      const display = getCurrentDisplay(header);
-      const { x: workAreaX, width: workAreaWidth } = display.workArea;
-      
-      const clampedX = Math.max(workAreaX, Math.min(workAreaX + workAreaWidth - width, newX));
-
-      header.setBounds({ x: clampedX, y: currentBounds.y, width, height });
-
-      if (!wasResizable) {
-        header.setResizable(false);
-      }
-      
-      if (updateLayout) {
-        updateLayout();
-      }
-      
-      return { success: true };
     }
     return { success: false, error: 'Header window not found' };
 };
@@ -433,15 +444,15 @@ function createFeatureWindows(header, namesToCreate) {
 
     const createFeatureWindow = (name) => {
         if (windowPool.has(name)) return;
-        
+
         switch (name) {
             case 'listen': {
                 const listen = new BrowserWindow({
-                    ...commonChildOptions, width:400,minWidth:400,maxWidth:900,
-                    maxHeight:900,
+                    ...commonChildOptions, width: 400, minWidth: 400, maxWidth: 900,
+                    maxHeight: 900,
                 });
                 listen.setContentProtection(isContentProtectionOn);
-                listen.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});
+                listen.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
                 if (process.platform === 'darwin') {
                     listen.setWindowButtonVisibility(false);
                 }
@@ -470,9 +481,9 @@ function createFeatureWindows(header, namesToCreate) {
 
             // ask
             case 'ask': {
-                const ask = new BrowserWindow({ ...commonChildOptions, width:600 });
+                const ask = new BrowserWindow({ ...commonChildOptions, width: 600 });
                 ask.setContentProtection(isContentProtectionOn);
-                ask.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});
+                ask.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
                 if (process.platform === 'darwin') {
                     ask.setWindowButtonVisibility(false);
                 }
@@ -483,6 +494,7 @@ function createFeatureWindows(header, namesToCreate) {
                 else {
                     askLoadOptions.query.glass = 'true';
                     ask.loadFile(path.join(__dirname, '../ui/app/content.html'), askLoadOptions);
+
                     ask.webContents.once('did-finish-load', () => {
                         const viewId = liquidGlass.addView(ask.getNativeWindowHandle());
                         if (viewId !== -1) {
@@ -492,7 +504,7 @@ function createFeatureWindows(header, namesToCreate) {
                         }
                     });
                 }
-                
+
                 // Open DevTools in development
                 if (!app.isPackaged) {
                     ask.webContents.openDevTools({ mode: 'detach' });
@@ -500,23 +512,72 @@ function createFeatureWindows(header, namesToCreate) {
                 windowPool.set('ask', ask);
                 break;
             }
+            case 'interview-window': {
+                const pdfWin = new BrowserWindow({
+                    parent: header,
+                    show: false,
+                    frame: false,
+                    transparent: true,
+                    vibrancy: false,
+                    hasShadow: false,
+                    skipTaskbar: true,
+                    hiddenInMissionControl: true,
+                    resizable: true,
+                    width: 700,
+                    height: 600,
+                    webPreferences: {
+                        nodeIntegration: false,
+                        contextIsolation: true,
+                        preload: path.join(__dirname, '../ui/questions/questionsPreload.js'),
+                    },
+                });
+
+                pdfWin.setContentProtection(isContentProtectionOn);
+                pdfWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+                if (process.platform === 'darwin') {
+                    pdfWin.setWindowButtonVisibility(false);
+                }
+
+                // Load your separate HTML file
+                // pdfWin.loadFile(path.join(__dirname, '../ui/questions/questions.html'));
+                const isDev = !app.isPackaged;
+                // pdfWin.loadFile(path.join(__dirname, '../ui/questions/dist/index.html'));
+
+                if (isDev) {
+                    pdfWin.loadURL('http://localhost:5173');
+                } else {
+                    pdfWin.loadFile(path.join(__dirname, '../ui/questions/dist/index.html'));
+                }
+
+
+
+                windowPool.set('interview-window', pdfWin);
+
+                if (!app.isPackaged) {
+                    pdfWin.webContents.openDevTools({ mode: 'detach' });
+                }
+                break;
+            }
+
+
 
             // settings
             case 'settings': {
-                const settings = new BrowserWindow({ ...commonChildOptions, width:240, maxHeight:400, parent:undefined });
+                const settings = new BrowserWindow({ ...commonChildOptions, width: 240, maxHeight: 400, parent: undefined });
                 settings.setContentProtection(isContentProtectionOn);
-                settings.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});
+                settings.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
                 if (process.platform === 'darwin') {
                     settings.setWindowButtonVisibility(false);
                 }
                 const settingsLoadOptions = { query: { view: 'settings' } };
                 if (!shouldUseLiquidGlass) {
-                    settings.loadFile(path.join(__dirname,'../ui/app/content.html'), settingsLoadOptions)
+                    settings.loadFile(path.join(__dirname, '../ui/app/content.html'), settingsLoadOptions)
                         .catch(console.error);
                 }
                 else {
                     settingsLoadOptions.query.glass = 'true';
-                    settings.loadFile(path.join(__dirname,'../ui/app/content.html'), settingsLoadOptions)
+                    settings.loadFile(path.join(__dirname, '../ui/app/content.html'), settingsLoadOptions)
                         .catch(console.error);
                     settings.webContents.once('did-finish-load', () => {
                         const viewId = liquidGlass.addView(settings.getNativeWindowHandle());
@@ -527,7 +588,7 @@ function createFeatureWindows(header, namesToCreate) {
                         }
                     });
                 }
-                windowPool.set('settings', settings);  
+                windowPool.set('settings', settings);
 
                 if (!app.isPackaged) {
                     settings.webContents.openDevTools({ mode: 'detach' });
@@ -547,7 +608,7 @@ function createFeatureWindows(header, namesToCreate) {
                 });
 
                 shortcutEditor.setContentProtection(isContentProtectionOn);
-                shortcutEditor.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});
+                shortcutEditor.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
                 if (process.platform === 'darwin') {
                     shortcutEditor.setWindowButtonVisibility(false);
                 }
@@ -584,16 +645,17 @@ function createFeatureWindows(header, namesToCreate) {
         createFeatureWindow('ask');
         createFeatureWindow('settings');
         createFeatureWindow('shortcut-settings');
+        createFeatureWindow('interview-window');
     }
 }
 
 function destroyFeatureWindows() {
-    const featureWindows = ['listen','ask','settings','shortcut-settings'];
+    const featureWindows = ['listen', 'ask', 'settings', 'shortcut-settings', 'interview-window'];
     if (settingsHideTimer) {
         clearTimeout(settingsHideTimer);
         settingsHideTimer = null;
     }
-    featureWindows.forEach(name=>{
+    featureWindows.forEach(name => {
         const win = windowPool.get(name);
         if (win && !win.isDestroyed()) win.destroy();
         windowPool.delete(name);
@@ -619,6 +681,40 @@ function getDisplayById(displayId) {
     return displays.find(d => d.id === displayId) || screen.getPrimaryDisplay();
 }
 
+function openWindow(viewName, payload = null) {
+    let win = windowPool.get(viewName);
+    if (win && !win.isDestroyed()) {
+        win.show();
+        if (payload) {
+            win.webContents.send(`view:${viewName}`, payload);
+        }
+        return;
+    }
+
+    const winOptions = {
+        ...commonChildOptions,
+        width: 600,
+        height: 800,
+        webPreferences: {
+            preload: path.join(__dirname, '../ui/preload.js'),
+        },
+    };
+
+    const winInstance = new BrowserWindow(winOptions);
+    const query = { view: viewName };
+
+    winInstance.loadFile(path.join(__dirname, '../ui/app/content.html'), { query });
+
+    winInstance.webContents.once('did-finish-load', () => {
+        if (payload) {
+            winInstance.webContents.send(`view:${viewName}`, payload);
+        }
+    });
+
+    windowPool.set(viewName, winInstance);
+}
+
+
 
 
 
@@ -631,7 +727,7 @@ function createWindows() {
     const initialX = Math.round((screenWidth - DEFAULT_WINDOW_WIDTH) / 2);
     const initialY = workAreaY + 21;
     movementManager = new SmoothMovementManager(windowPool, getDisplayById, getCurrentDisplay, updateLayout);
-    
+
     const header = new BrowserWindow({
         width: DEFAULT_WINDOW_WIDTH,
         height: HEADER_HEIGHT,
@@ -693,12 +789,12 @@ function createWindows() {
     setupWindowController(windowPool, layoutManager, movementManager);
 
     if (currentHeaderState === 'main') {
-        createFeatureWindows(header, ['listen', 'ask', 'settings', 'shortcut-settings']);
+        createFeatureWindows(header, ['listen', 'ask', 'settings', 'shortcut-settings', 'interview-window']);
     }
 
     header.setContentProtection(isContentProtectionOn);
     header.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    
+
     // Open DevTools in development
     if (!app.isPackaged) {
         header.webContents.openDevTools({ mode: 'detach' });
@@ -802,13 +898,13 @@ const moveHeaderTo = (newX, newY) => {
 
         let clampedX = newX;
         let clampedY = newY;
-        
+
         if (newX < workAreaX) {
             clampedX = workAreaX;
         } else if (newX + headerBounds.width > workAreaX + width) {
             clampedX = workAreaX + width - headerBounds.width;
         }
-        
+
         if (newY < workAreaY) {
             clampedY = workAreaY;
         } else if (newY + headerBounds.height > workAreaY + height) {
@@ -831,14 +927,14 @@ const adjustWindowHeight = (sender, targetHeight) => {
         const currentBounds = senderWindow.getBounds();
         const minHeight = senderWindow.getMinimumSize()[1];
         const maxHeight = senderWindow.getMaximumSize()[1];
-        
+
         let adjustedHeight;
         if (maxHeight === 0) {
             adjustedHeight = Math.max(minHeight, targetHeight);
         } else {
             adjustedHeight = Math.max(minHeight, Math.min(maxHeight, targetHeight));
         }
-        
+
         senderWindow.setSize(currentBounds.width, adjustedHeight, false);
 
         if (!wasResizable) {
@@ -868,4 +964,5 @@ module.exports = {
     moveHeader,
     moveHeaderTo,
     adjustWindowHeight,
+    openWindow
 };
