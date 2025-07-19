@@ -90,7 +90,7 @@ export default function SettingsPage() {
     return null
   }
 
-  const isFirebaseMode = mode === 'firebase'
+  const isNextAuthMode = mode === 'nextauth'
 
   const tabs = [
     { id: 'profile' as Tab, name: 'Personal Profile', href: '/settings' },
@@ -128,8 +128,8 @@ export default function SettingsPage() {
   }
 
   const handleDeleteAccount = async () => {
-    const confirmMessage = isFirebaseMode
-      ? "Are you sure you want to delete your account? This action cannot be undone and all data stored in Firebase will be deleted."
+    const confirmMessage = isNextAuthMode
+      ? "Are you sure you want to delete your account? This action cannot be undone and all data stored in the cloud will be deleted."
       : "Are you sure you want to delete your account? This action cannot be undone and all data will be deleted."
 
     if (window.confirm(confirmMessage)) {
@@ -152,20 +152,20 @@ export default function SettingsPage() {
 
   const renderBillingContent = () => (
     <div className="space-y-8">
-      <div className={`p-4 rounded-lg border ${isFirebaseMode ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+      <div className={`p-4 rounded-lg border ${isNextAuthMode ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
         <div className="flex items-center gap-2 mb-2">
-          {isFirebaseMode ? (
+          {isNextAuthMode ? (
             <Cloud className="h-5 w-5 text-blue-600" />
           ) : (
             <HardDrive className="h-5 w-5 text-gray-600" />
           )}
-          <h3 className={`font-semibold ${isFirebaseMode ? 'text-blue-900' : 'text-gray-900'}`}>
-            {isFirebaseMode ? 'Firebase Hosting Mode' : 'Local Execution Mode'}
+          <h3 className={`font-semibold ${isNextAuthMode ? 'text-blue-900' : 'text-gray-900'}`}>
+            {isNextAuthMode ? 'Cloud Sync Mode' : 'Local Execution Mode'}
           </h3>
         </div>
-        <p className={`text-sm ${isFirebaseMode ? 'text-blue-700' : 'text-gray-700'}`}>
-          {isFirebaseMode
-            ? 'All data is safely stored and synchronized in Firebase Cloud.'
+        <p className={`text-sm ${isNextAuthMode ? 'text-blue-700' : 'text-gray-700'}`}>
+          {isNextAuthMode
+            ? 'All data is safely stored and synchronized in the cloud.'
             : 'Data is stored in local database and you can use personal API keys.'
           }
         </p>
@@ -330,8 +330,8 @@ export default function SettingsPage() {
           <div>
             <h4 className="font-semibold text-green-900">All features are currently free!</h4>
             <p className="text-green-700 text-sm">
-              {isFirebaseMode
-                ? 'Enjoy all Pickle Glass features for free in Firebase hosting mode. Pro and Enterprise plans will be released soon with additional premium features.'
+              {isNextAuthMode
+                ? 'Enjoy all Pickle Glass features for free in cloud sync mode. Pro and Enterprise plans will be released soon with additional premium features.'
                 : 'Enjoy all Pickle Glass features for free in local mode. You can use personal API keys or continue using the free system.'
               }
             </p>
@@ -348,27 +348,27 @@ export default function SettingsPage() {
       case 'profile':
         return (
           <div className="space-y-6">
-            <div className={`p-4 rounded-lg border ${isFirebaseMode ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`p-4 rounded-lg border ${isNextAuthMode ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {isFirebaseMode ? (
+                  {isNextAuthMode ? (
                     <Cloud className="h-5 w-5 text-blue-600" />
                   ) : (
                     <HardDrive className="h-5 w-5 text-gray-600" />
                   )}
                   <div>
-                    <h3 className={`font-semibold ${isFirebaseMode ? 'text-blue-900' : 'text-gray-900'}`}>
-                      {isFirebaseMode ? 'Firebase Hosting Mode' : 'Local Execution Mode'}
+                    <h3 className={`font-semibold ${isNextAuthMode ? 'text-blue-900' : 'text-gray-900'}`}>
+                      {isNextAuthMode ? 'Cloud Sync Mode' : 'Local Execution Mode'}
                     </h3>
-                    <p className={`text-sm ${isFirebaseMode ? 'text-blue-700' : 'text-gray-700'}`}>
-                      {isFirebaseMode
+                    <p className={`text-sm ${isNextAuthMode ? 'text-blue-700' : 'text-gray-700'}`}>
+                      {isNextAuthMode
                         ? `Logged in with Google account (${userInfo.email})`
                         : 'Running as local user'
                       }
                     </p>
                   </div>
                 </div>
-                {isFirebaseMode && (
+                {isNextAuthMode && (
                   <button
                     onClick={handleLogout}
                     className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 underline"
@@ -425,7 +425,7 @@ export default function SettingsPage() {
             </div>
 
 
-            {!isFirebaseMode && (
+            {!isNextAuthMode && (
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">API Key</h3>
                 <p className="text-sm text-gray-600 mb-4">
@@ -465,12 +465,12 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {(isFirebaseMode || (!isFirebaseMode && !hasApiKey)) && (
+            {(isNextAuthMode || (!isNextAuthMode && !hasApiKey)) && (
               <div className="bg-white border border-red-300 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Delete Account</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  {isFirebaseMode
-                    ? 'Permanently remove your Firebase account and all content. This action cannot be undone, so please proceed carefully.'
+                  {isNextAuthMode
+                    ? 'Permanently remove your cloud account and all content. This action cannot be undone, so please proceed carefully.'
                     : 'Permanently remove your personal account and all content from the Pickle Glass platform. This action cannot be undone, so please proceed carefully.'
                   }
                 </p>

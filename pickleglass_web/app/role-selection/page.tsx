@@ -1,14 +1,13 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/utils/firebase'
 import { Suspense, useEffect, useState } from 'react'
-import { getAuth } from 'firebase/auth'
+import { useSession } from 'next-auth/react'
 
 function RoleSelection() {
   const router = useRouter()
   const params = useSearchParams()
+  const { data: session } = useSession()
 
   const paramUid = params.get('uid')
   const email = params.get('email')
@@ -17,7 +16,8 @@ function RoleSelection() {
   const [currentRole, setCurrentRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const uid = paramUid || getAuth().currentUser?.uid || null
+  // Use NextAuth session user ID or fallback to param
+  const uid = paramUid || session?.userId || (session?.user as any)?.id || null
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -27,11 +27,9 @@ function RoleSelection() {
       }
 
       try {
-        const docRef = doc(firestore, 'users', uid)
-        const docSnap = await getDoc(docRef)
-        if (docSnap.exists()) {
-          setCurrentRole(docSnap.data().role || null)
-        }
+        // TODO: Implement backend API call to get user role
+        // For now, we'll assume no role is set
+        setCurrentRole(null)
       } catch (err) {
         console.error('❌ Failed to fetch role:', err)
       } finally {
@@ -45,26 +43,26 @@ function RoleSelection() {
   const handleRoleSelect = async (role: 'interviewer' | 'interviewee') => {
     if (!uid) return
 
-    await setDoc(doc(firestore, 'users', uid), {
-      role,
-      email,
-      displayName,
-      updatedAt: Date.now(),
-    }, { merge: true })
+    try {
+      // TODO: Implement backend API call to save user role
+      // For now, we'll just set the local state
+      setCurrentRole(role)
 
-    setCurrentRole(role)
+      if (paramUid) {
+        const deepLinkUrl = `pickleglass://auth-success?` + new URLSearchParams({
+          uid: uid || '',
+          email: email || '',
+          displayName: displayName || '',
+          token: token || '',
+          role
+        }).toString()
 
-    if (paramUid) {
-      const deepLinkUrl = `pickleglass://auth-success?` + new URLSearchParams({
-        uid: uid || '',
-        email: email || '',
-        displayName: displayName || '',
-        token: token || '',
-        role
-      }).toString()
-
-      console.log('🔗 Deep linking to:', deepLinkUrl)
-      window.location.href = deepLinkUrl
+        console.log('🔗 Deep linking to:', deepLinkUrl)
+        window.location.href = deepLinkUrl
+      }
+    } catch (error) {
+      console.error('❌ Failed to save role:', error)
+      alert('Failed to save role. Please try again.')
     }
   }
 

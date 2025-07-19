@@ -1,11 +1,9 @@
 'use client'
-
 import { useRouter } from 'next/navigation'
 import { Chrome } from 'lucide-react'
 import { useState, useEffect } from 'react'
+
 import { signInWithGoogle, getCurrentSession } from '@/utils/nextAuth'
-import { doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/utils/firebase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -34,36 +32,18 @@ export default function LoginPage() {
               const user = session.user
               const uid = session.userId || (user as any).id || 'unknown'
 
-              // 🔍 Check Firestore for role (keeping this for now)
-              const userRef = doc(firestore, 'users', uid)
-              const userSnap = await getDoc(userRef)
-              const role = userSnap.exists() ? userSnap.data()?.role : null
-
-              // If role is not found we should redirect user to choose the role
-              if (!role) {
-                router.push(
-                  '/role-selection?' +
-                  new URLSearchParams({
-                    uid: uid,
-                    email: user.email || '',
-                    displayName: user.name || '',
-                    token: session.accessToken || ''
-                  }).toString()
-                )
-                return
-              }
-
-              // Redirect to deeplink directly if we found the role
-              const deepLinkUrl =
-                `pickleglass://auth-success?` +
+              // For now, we'll redirect to role selection for all users
+              // TODO: Implement backend API to check user role instead of Firestore
+              router.push(
+                '/role-selection?' +
                 new URLSearchParams({
-                  uid,
+                  uid: uid,
                   email: user.email || '',
                   displayName: user.name || '',
-                  token: session.accessToken || '',
-                  role
+                  token: session.accessToken || ''
                 }).toString()
-              window.location.href = deepLinkUrl
+              )
+              return
             }
           } catch (error) {
             console.error('❌ Deep link processing failed:', error)
