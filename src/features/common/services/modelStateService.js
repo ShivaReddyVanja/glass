@@ -8,7 +8,7 @@ const providerSettingsRepository = require('../repositories/providerSettings');
 const userModelSelectionsRepository = require('../repositories/userModelSelections');
 
 // Import authService directly (singleton)
-const authService = require('./authService');
+const authService = require('./nextAuthService');
 
 class ModelStateService extends EventEmitter {
     constructor() {

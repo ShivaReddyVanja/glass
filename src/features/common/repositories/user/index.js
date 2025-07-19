@@ -5,7 +5,7 @@ let authService = null;
 
 function getAuthService() {
     if (!authService) {
-        authService = require('../../services/authService');
+        authService = require('../../services/nextAuthService');
     }
     return authService;
 }

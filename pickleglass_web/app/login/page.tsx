@@ -1,11 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
-import { auth, firestore } from '@/utils/firebase'
 import { Chrome } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { signInWithGoogle, getCurrentSession } from '@/utils/nextAuth'
 import { doc, getDoc } from 'firebase/firestore'
+import { firestore } from '@/utils/firebase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,82 +19,62 @@ export default function LoginPage() {
   }, [])
 
   const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider()
     setIsLoading(true)
 
     try {
-      const result = await signInWithPopup(auth, provider)
-      const user = result.user
-
-      if (user) {
-        console.log('✅ Google login successful:', user.uid)
-
+      const result = await signInWithGoogle()
+      
+      if (result?.ok) {
+        console.log('✅ Google login successful')
+        
         if (isElectronMode) {
           try {
-            const idToken = await user.getIdToken()
-            const uid = user.uid
+            const session = await getCurrentSession()
+            if (session?.user) {
+              const user = session.user
+              const uid = session.userId || (user as any).id || 'unknown'
 
-            // 🔍 Check Firestore for role
-            const userRef = doc(firestore, 'users', uid)
-            const userSnap = await getDoc(userRef)
+              // 🔍 Check Firestore for role (keeping this for now)
+              const userRef = doc(firestore, 'users', uid)
+              const userSnap = await getDoc(userRef)
+              const role = userSnap.exists() ? userSnap.data()?.role : null
 
-            const role = userSnap.exists() ? userSnap.data()?.role : null
+              // If role is not found we should redirect user to choose the role
+              if (!role) {
+                router.push(
+                  '/role-selection?' +
+                  new URLSearchParams({
+                    uid: uid,
+                    email: user.email || '',
+                    displayName: user.name || '',
+                    token: session.accessToken || ''
+                  }).toString()
+                )
+                return
+              }
 
-            //if role is not found we should redirect user to choose the role
-            if(!role){
-            router.push(
-              '/role-selection?' +
-              new URLSearchParams({
-                uid: user.uid,
-                email: user.email || '',
-                displayName: user.displayName || '',
-                token: await user.getIdToken()
-              }).toString()
-            )
-           }
-
-            //redirect to deeplink directly if we found the role
-            const deepLinkUrl =
-              `pickleglass://auth-success?` +
-              new URLSearchParams({
-                uid,
-                email: user.email || '',
-                displayName: user.displayName || '',
-                token: idToken,
-                role
-              }).toString()
-           window.location.href = deepLinkUrl;
-
-            // Maybe we don't need this
-            // setTimeout(() => {
-            //   alert('Login completed. Please return to Pickle Glass app.')
-            // }, 1000)
-
+              // Redirect to deeplink directly if we found the role
+              const deepLinkUrl =
+                `pickleglass://auth-success?` +
+                new URLSearchParams({
+                  uid,
+                  email: user.email || '',
+                  displayName: user.name || '',
+                  token: session.accessToken || '',
+                  role
+                }).toString()
+              window.location.href = deepLinkUrl
+            }
           } catch (error) {
             console.error('❌ Deep link processing failed:', error)
             alert('Login was successful but failed to return to app. Please check the app.')
           }
-        }
-        else if (typeof window !== 'undefined' && window.require) {
-          try {
-            const { ipcRenderer } = window.require('electron')
-            const idToken = await user.getIdToken()
-
-            ipcRenderer.send('firebase-auth-success', {
-              uid: user.uid,
-              displayName: user.displayName,
-              email: user.email,
-              idToken
-            })
-
-            console.log('📡 Auth info sent to electron successfully')
-          } catch (error) {
-            console.error('❌ Electron communication failed:', error)
-          }
-        }
-        else {
+        } else {
           router.push('/settings')
         }
+      } else {
+        console.error('❌ Google login failed:', result?.error)
+        alert('An error occurred during login. Please try again.')
       }
     } catch (error: any) {
       console.error('❌ Google login failed:', error)

@@ -16,7 +16,7 @@ const { createWindows } = require('./window/windowManager.js');
 const listenService = require('./features/listen/listenService');
 const { initializeFirebase } = require('./features/common/services/firebaseClient');
 const databaseInitializer = require('./features/common/services/databaseInitializer');
-const authService = require('./features/common/services/authService');
+const nextAuthService = require('./features/common/services/nextAuthService');
 const path = require('node:path');
 const express = require('express');
 const fetch = require('node-fetch');
@@ -192,7 +192,7 @@ app.whenReady().then(async () => {
         // Clean up zombie sessions from previous runs first - MOVED TO authService
         // sessionRepository.endAllActiveSessions();
 
-        await authService.initialize();
+        await nextAuthService.initialize();
 
         //////// after_modelStateService ////////
         await modelStateService.initialize();
@@ -446,33 +446,16 @@ function setupWebDataHandlers() {
 
 async function handleCustomUrl(url) {
     try {
-        console.log('[Custom URL] Processing URL:', url);
-        
-        // Validate and clean URL
-        if (!url || typeof url !== 'string' || !url.startsWith('pickleglass://')) {
-            console.error('[Custom URL] Invalid URL format:', url);
-            return;
-        }
-        
-        // Clean up URL by removing problematic characters
-        const cleanUrl = url.replace(/[\\₩]/g, '');
-        
-        // Additional validation
-        if (cleanUrl !== url) {
-            console.log('[Custom URL] Cleaned URL from:', url, 'to:', cleanUrl);
-            url = cleanUrl;
-        }
-        
         const urlObj = new URL(url);
         const action = urlObj.hostname;
-        const params = Object.fromEntries(urlObj.searchParams);
-        
+        const params = Object.fromEntries(urlObj.searchParams.entries());
+
         console.log('[Custom URL] Action:', action, 'Params:', params);
 
         switch (action) {
             case 'login':
             case 'auth-success':
-                await handleFirebaseAuthCallback(params);
+                await handleNextAuthCallback(params);
                 break;
             case 'personalize':
                 handlePersonalizeFromUrl(params);
@@ -495,49 +478,44 @@ async function handleCustomUrl(url) {
     }
 }
 
-async function handleFirebaseAuthCallback(params) {
+async function handleNextAuthCallback(params) {
     const userRepository = require('./features/common/repositories/user');
-    const { token: idToken } = params;
+    const nextAuthService = require('./features/common/services/nextAuthService');
+    const { token: accessToken, uid, email, displayName, role } = params;
 
-    if (!idToken) {
-        console.error('[Auth] Firebase auth callback is missing ID token.');
-        // No need to send IPC, the UI won't transition without a successful auth state change.
+    if (!accessToken) {
+        console.error('[Auth] NextAuth callback is missing access token.');
         return;
     }
 
-    console.log('[Auth] Received ID token from deep link, exchanging for custom token...');
+    console.log('[Auth] Received NextAuth session data from deep link...');
 
     try {
-        const functionUrl = 'https://us-west1-pickle-3651a.cloudfunctions.net/pickleGlassAuthCallback';
-        const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: idToken })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Failed to exchange token.');
-        }
-
-        const { customToken, user } = data;
-        console.log('[Auth] Successfully received custom token for user:', user.uid);
-
-        const firebaseUser = {
-            uid: user.uid,
-            email: user.email || 'no-email@example.com',
-            displayName: user.name || 'User',
-            photoURL: user.picture
+        // Create session data structure similar to NextAuth
+        const sessionData = {
+            user: {
+                id: uid,
+                email: email,
+                name: displayName,
+                image: null
+            },
+            userId: uid,
+            accessToken: accessToken
         };
 
         // 1. Sync user data to local DB
+        const firebaseUser = {
+            uid: uid,
+            email: email || 'no-email@example.com',
+            displayName: displayName || 'User',
+            photoURL: null
+        };
         userRepository.findOrCreate(firebaseUser);
         console.log('[Auth] User data synced with local DB.');
 
-        // 2. Sign in using the authService in the main process
-        await authService.signInWithCustomToken(customToken);
-        console.log('[Auth] Main process sign-in initiated. Waiting for onAuthStateChanged...');
+        // 2. Sign in using the NextAuth service
+        await nextAuthService.signInWithNextAuthSession(sessionData);
+        console.log('[Auth] NextAuth sign-in completed successfully.');
 
         // 3. Focus the app window
         const { windowPool } = require('./window/windowManager.js');
@@ -550,7 +528,7 @@ async function handleFirebaseAuthCallback(params) {
         }
         
     } catch (error) {
-        console.error('[Auth] Error during custom token exchange or sign-in:', error);
+        console.error('[Auth] Error during NextAuth sign-in:', error);
         // The UI will not change, and the user can try again.
         // Optionally, send a generic error event to the renderer.
         const { windowPool } = require('./window/windowManager.js');

@@ -15,6 +15,7 @@ import {
 import { Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
+  id:string,
   uid: string;
   display_name: string;
   email: string;
@@ -393,8 +394,9 @@ export const getUserProfile = async (): Promise<UserProfile> => {
   if (isFirebaseMode()) {
     const user = firebaseAuth.currentUser!;
     const firestoreProfile = await FirestoreUserService.getUser(user.uid);
-    
+
     return {
+      id: user.uid,
       uid: user.uid,
       display_name: firestoreProfile?.displayName || user.displayName || 'User',
       email: firestoreProfile?.email || user.email || 'no-email@example.com'

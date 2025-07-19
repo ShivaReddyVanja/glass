@@ -4,7 +4,7 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const { createLLM } = require('../features/common/ai/factory');
 const settingsService = require('../features/settings/settingsService');
-const authService = require('../features/common/services/authService');
+const nextAuthService = require('../features/common/services/nextAuthService');
 const whisperService = require('../features/common/services/whisperService');
 const ollamaService = require('../features/common/services/ollamaService');
 const modelStateService = require('../features/common/services/modelStateService');
@@ -143,9 +143,9 @@ module.exports = {
     ipcMain.handle('check-permissions-completed', async () => await permissionService.checkPermissionsCompleted());
 
     // User/Auth
-    ipcMain.handle('get-current-user', () => authService.getCurrentUser());
-    ipcMain.handle('start-firebase-auth', async () => await authService.startFirebaseAuthFlow());
-    ipcMain.handle('firebase-logout', async () => await authService.signOut());
+    ipcMain.handle('get-current-user', () => nextAuthService.getCurrentUser());
+    ipcMain.handle('start-firebase-auth', async () => await nextAuthService.startNextAuthFlow());
+    ipcMain.handle('firebase-logout', async () => await nextAuthService.signOut());
 
     // App
     ipcMain.handle('quit-application', () => app.quit());
