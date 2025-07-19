@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { doc, getDoc } from 'firebase/firestore'
-import { firestore } from '@/utils/firebase'
+// Firebase imports removed - will use backend API instead
 import { useAuth } from './auth'
 
 export const useUserRole = () => {
@@ -12,11 +11,9 @@ export const useUserRole = () => {
     const fetchRole = async () => {
       if (!user || !user.uid) return
 
-      const userDoc = await getDoc(doc(firestore, 'users', user.uid))
-      if (userDoc.exists()) {
-        const data = userDoc.data()
-        setRole(data.role || null)
-      }
+      // TODO: Implement backend API call to get user role
+      // For now, return null
+      setRole(null)
       setLoading(false)
     }
 

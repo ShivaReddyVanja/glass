@@ -143,7 +143,7 @@ class HeaderTransitionManager {
     async handleLoginOption() {
         console.log('[HeaderController] Login option selected');
         if (window.api) {
-            await window.api.common.startFirebaseAuth();
+            await window.api.common.startNextAuthAuth();
         }
     }
 

@@ -14,7 +14,7 @@ if (require('electron-squirrel-startup')) {
 const { app, BrowserWindow, shell, ipcMain, dialog, desktopCapturer, session } = require('electron');
 const { createWindows } = require('./window/windowManager.js');
 const listenService = require('./features/listen/listenService');
-const { initializeFirebase } = require('./features/common/services/firebaseClient');
+const { initializeMongoDB } = require('./features/common/services/mongoClient');
 const databaseInitializer = require('./features/common/services/databaseInitializer');
 const nextAuthService = require('./features/common/services/nextAuthService');
 const path = require('node:path');
@@ -183,7 +183,7 @@ app.whenReady().then(async () => {
     });
 
     // Initialize core services
-    initializeFirebase();
+    await initializeMongoDB();
     
     try {
         await databaseInitializer.initialize();
@@ -504,13 +504,13 @@ async function handleNextAuthCallback(params) {
         };
 
         // 1. Sync user data to local DB
-        const firebaseUser = {
+        const nextAuthUser = {
             uid: uid,
             email: email || 'no-email@example.com',
             displayName: displayName || 'User',
             photoURL: null
         };
-        userRepository.findOrCreate(firebaseUser);
+        userRepository.findOrCreate(nextAuthUser);
         console.log('[Auth] User data synced with local DB.');
 
         // 2. Sign in using the NextAuth service

@@ -306,8 +306,8 @@ class ModelStateService extends EventEmitter {
         }
     }
     
-    setFirebaseVirtualKey(virtualKey) {
-        console.log(`[ModelStateService] Setting Firebase virtual key (for openai-glass).`);
+    setNextAuthVirtualKey(virtualKey) {
+        console.log(`[ModelStateService] Setting NextAuth virtual key (for openai-glass).`);
         this.state.apiKeys['openai-glass'] = virtualKey;
         
         const llmModels = PROVIDERS['openai-glass']?.llmModels;
@@ -394,12 +394,12 @@ class ModelStateService extends EventEmitter {
         return this.getProviderForModel(type, selectedModel);
     }
 
-    isLoggedInWithFirebase() {
+    isLoggedInWithNextAuth() {
         return this.authService.getCurrentUser().isLoggedIn;
     }
 
     areProvidersConfigured() {
-        if (this.isLoggedInWithFirebase()) return true;
+        if (this.isLoggedInWithNextAuth()) return true;
         
         console.log('[DEBUG] Checking configured providers with apiKeys state:', JSON.stringify(this.state.apiKeys, (key, value) => (value ? '***' : null), 2));
 
@@ -434,7 +434,7 @@ class ModelStateService extends EventEmitter {
     }
 
     hasValidApiKey() {
-        if (this.isLoggedInWithFirebase()) return true;
+        if (this.isLoggedInWithNextAuth()) return true;
         
         // Check if any provider has a valid API key
         return Object.entries(this.state.apiKeys).some(([provider, key]) => {

@@ -1,5 +1,6 @@
-const firebaseRepository = require('./firebase.repository');
+// Firebase repository removed - will be replaced with MongoDB
 const sqliteRepository = require('./sqlite.repository');
+const mongooseRepository = require('./mongoose.repository');
 
 let authService = null;
 
@@ -13,7 +14,7 @@ function getBaseRepository() {
     }
     
     const user = authService.getCurrentUser();
-    return user.isLoggedIn ? firebaseRepository : sqliteRepository;
+    return user.isLoggedIn ? mongooseRepository : sqliteRepository;
 }
 
 const providerSettingsRepositoryAdapter = {

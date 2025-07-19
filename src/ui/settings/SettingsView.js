@@ -482,7 +482,7 @@ export class SettingsView extends LitElement {
     //////// after_modelStateService ////////
     static properties = {
         shortcuts: { type: Object, state: true },
-        firebaseUser: { type: Object, state: true },
+        nextAuthUser: { type: Object, state: true },
 
 
         isLoading: { type: Boolean, state: true },
@@ -514,7 +514,7 @@ export class SettingsView extends LitElement {
         super();
         //////// after_modelStateService ////////
         this.shortcuts = {};
-        this.firebaseUser = null;
+        this.nextAuthUser = null;
         this.apiKeys = { openai: '', gemini: '', anthropic: '', whisper: '' };
         this.providerConfig = {};
         this.isLoading = true;
@@ -592,7 +592,7 @@ export class SettingsView extends LitElement {
                 window.api.settingsView.getWhisperInstalledModels()
             ]);
             
-            if (userState && userState.isLoggedIn) this.firebaseUser = userState;
+            if (userState && userState.isLoggedIn) this.nextAuthUser = userState;
             
             if (modelSettings.success) {
                 const { config, storedKeys, availableLlm, availableStt, selectedModels } = modelSettings.data;
@@ -875,8 +875,8 @@ export class SettingsView extends LitElement {
         e.preventDefault()
         if (this.wasJustDragged) return
     
-        console.log("Requesting Firebase authentication from main process...")
-        window.api.settingsView.startFirebaseAuth();
+        console.log("Requesting NextAuth authentication from main process...")
+        window.api.settingsView.startNextAuthAuth();
     }
     //////// after_modelStateService ////////
 
@@ -924,9 +924,9 @@ export class SettingsView extends LitElement {
         this._userStateListener = (event, userState) => {
             console.log('[SettingsView] Received user-state-changed:', userState);
             if (userState && userState.isLoggedIn) {
-                this.firebaseUser = userState;
-            } else {
-                this.firebaseUser = null;
+                            this.nextAuthUser = userState;
+        } else {
+            this.nextAuthUser = null;
             }
             this.loadAutoUpdateSetting();
             this.requestUpdate();
@@ -1109,9 +1109,9 @@ export class SettingsView extends LitElement {
         window.api.settingsView.quitApplication();
     }
 
-    handleFirebaseLogout() {
-        console.log('Firebase Logout clicked');
-        window.api.settingsView.firebaseLogout();
+    handleNextAuthLogout() {
+        console.log('NextAuth Logout clicked');
+        window.api.settingsView.nextAuthLogout();
     }
 
     async handleOllamaShutdown() {
@@ -1155,7 +1155,7 @@ export class SettingsView extends LitElement {
             `;
         }
 
-        const loggedIn = !!this.firebaseUser;
+        const loggedIn = !!this.nextAuthUser;
 
         const apiKeyManagementHTML = html`
             <div class="api-key-section">
@@ -1360,8 +1360,8 @@ export class SettingsView extends LitElement {
                     <div>
                         <h1 class="app-title">Pickle Glass</h1>
                         <div class="account-info">
-                            ${this.firebaseUser
-                                ? html`Account: ${this.firebaseUser.email || 'Logged In'}`
+                            ${this.nextAuthUser
+                                ? html`Account: ${this.nextAuthUser.email || 'Logged In'}`
                                 : `Account: Not Logged In`
                             }
                         </div>
@@ -1445,9 +1445,9 @@ export class SettingsView extends LitElement {
                     </button>
                     
                     <div class="bottom-buttons">
-                        ${this.firebaseUser
+                        ${this.nextAuthUser
                             ? html`
-                                <button class="settings-button half-width danger" @click=${this.handleFirebaseLogout}>
+                                <button class="settings-button half-width danger" @click=${this.handleNextAuthLogout}>
                                     <span>Logout</span>
                                 </button>
                                 `

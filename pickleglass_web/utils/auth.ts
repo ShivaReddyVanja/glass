@@ -14,7 +14,7 @@ export const useAuth = () => {
   const { data: session, status } = useSession()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [mode, setMode] = useState<'local' | 'firebase' | null>(null)
+  const [mode, setMode] = useState<'local' | 'nextauth' | null>(null)
 
   useEffect(() => {
     if (status === 'loading') {
@@ -25,7 +25,7 @@ export const useAuth = () => {
     if (session?.user) {
       //@ts-ignore
       console.log('🔥 NextAuth mode activated:', session.userId || session.user.id);
-      setMode('firebase'); // Keep 'firebase' for compatibility
+      setMode('nextauth'); // Keep 'nextauth' for compatibility
       //@ts-ignore
       let profile: UserProfile = {
         //@ts-ignore

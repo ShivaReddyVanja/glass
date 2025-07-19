@@ -144,8 +144,8 @@ module.exports = {
 
     // User/Auth
     ipcMain.handle('get-current-user', () => nextAuthService.getCurrentUser());
-    ipcMain.handle('start-firebase-auth', async () => await nextAuthService.startNextAuthFlow());
-    ipcMain.handle('firebase-logout', async () => await nextAuthService.signOut());
+    ipcMain.handle('start-nextauth-auth', async () => await nextAuthService.startNextAuthFlow());
+    ipcMain.handle('nextauth-logout', async () => await nextAuthService.signOut());
 
     // App
     ipcMain.handle('quit-application', () => app.quit());

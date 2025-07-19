@@ -1,5 +1,5 @@
 const sqliteRepository = require('./sqlite.repository');
-const firebaseRepository = require('./firebase.repository');
+const mongooseRepository = require('./mongoose.repository');
 
 let authService = null;
 
@@ -17,7 +17,7 @@ function getBaseRepository() {
     }
     const user = service.getCurrentUser();
     if (user && user.isLoggedIn) {
-        return firebaseRepository;
+        return mongooseRepository;
     }
     return sqliteRepository;
 }

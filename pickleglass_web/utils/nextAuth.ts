@@ -31,7 +31,7 @@ export const useNextAuth = () => {
 
 export const useAuth = () => {
   const { user, isLoading, isAuthenticated, session } = useNextAuth()
-  const mode = isAuthenticated ? 'firebase' : 'local' // Keep 'firebase' for compatibility
+  const mode = isAuthenticated ? 'nextauth' : 'local' // Keep 'nextauth' for compatibility
 
   // Set user info for compatibility with existing code
   if (user && isAuthenticated) {

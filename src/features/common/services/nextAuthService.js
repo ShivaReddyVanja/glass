@@ -36,7 +36,7 @@ async function getVirtualKeyByEmail(email, accessToken) {
 class NextAuthService {
     constructor() {
         this.currentUserId = 'default_user';
-        this.currentUserMode = 'local'; // 'local' or 'firebase' (keeping for compatibility)
+        this.currentUserMode = 'local'; // 'local' or 'nextauth' (keeping for compatibility)
         this.currentUser = null;
         this.isInitialized = false;
         this.session = null;
@@ -97,7 +97,7 @@ class NextAuthService {
                     photoURL: user.image
                 };
                 this.currentUserId = userId;
-                this.currentUserMode = 'firebase'; // Keep for compatibility
+                this.currentUserMode = 'nextauth'; // Keep for compatibility
                 this.session = sessionData;
 
                 // Clean up any zombie sessions from a previous run for this user.
@@ -117,7 +117,7 @@ class NextAuthService {
                             const virtualKey = await getVirtualKeyByEmail(user.email, sessionData.accessToken);
 
                             if (global.modelStateService) {
-                                global.modelStateService.setFirebaseVirtualKey(virtualKey);
+                                global.modelStateService.setNextAuthVirtualKey(virtualKey);
                             }
                             console.log(`[NextAuthService] BG: Virtual key for ${user.email} has been processed.`);
 
@@ -132,9 +132,9 @@ class NextAuthService {
                 console.log(`[NextAuthService] No NextAuth user.`);
                 if (previousUser) {
                     console.log(`[NextAuthService] Clearing API key for logged-out user: ${previousUser.uid}`);
-                    if (global.modelStateService) {
-                        global.modelStateService.setFirebaseVirtualKey(null);
-                    }
+                                            if (global.modelStateService) {
+                            global.modelStateService.setNextAuthVirtualKey(null);
+                        }
                 }
                 this.currentUser = null;
                 this.currentUserId = 'default_user';
@@ -192,14 +192,14 @@ class NextAuthService {
     }
 
     getCurrentUser() {
-        const isLoggedIn = !!(this.currentUserMode === 'firebase' && this.currentUser);
+        const isLoggedIn = !!(this.currentUserMode === 'nextauth' && this.currentUser);
 
         if (isLoggedIn) {
             return {
                 uid: this.currentUser.uid,
                 email: this.currentUser.email,
                 displayName: this.currentUser.displayName,
-                mode: 'firebase',
+                mode: 'nextauth',
                 isLoggedIn: true,
             };
         }
